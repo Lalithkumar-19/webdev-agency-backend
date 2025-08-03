@@ -275,21 +275,34 @@ app.get("/api/projects/v1/filtered", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Check if credentials are provided
     if (!email || !password) {
-      res.status(400).json("missing some credentials");
+      return res.status(400).json("missing some credentials");
     }
-    const admin = admins.find({ email, password });
+    
+    // For Mongoose - use findOne with await
+    const admin = await admins.findOne({ email: email, password: password });
+    
     if (!admin) {
-      res.status(403).json("Unauthorized access");
-      return;
+      return res.status(403).json("Unauthorized access");
     }
-    const token = JWT.sign(req.body, process.env.SECRET);
+    
+    // Generate token for verified admin
+    const token = JWT.sign({ 
+      email: admin.email, 
+      id: admin._id 
+    }, process.env.SECRET);
+    
     res.status(200).json({ token });
+    
   } catch (error) {
-    console.error("Error fetching filters:", error);
+    console.error("Error in login:", error);
     res.status(500).json({ message: "Internal server error occurred" });
   }
 });
+
+
 
 // app.get("")
 
