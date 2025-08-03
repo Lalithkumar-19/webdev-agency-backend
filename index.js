@@ -66,8 +66,22 @@ app.post("/api/projects", async (req, res) => {
 
 app.get("/api/projects", async (req, res) => {
   try {
-    const AllProjects = await Projects.find();
-    res.status(200).json(AllProjects);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const count = await Projects.countDocuments();
+    const totalPages = Math.ceil(count / limit);
+    const projects = await Projects.find()
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      projects,
+      totalCount: count,
+      currentPage: page,
+      totalPages
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json("internal server error occured");
@@ -100,13 +114,14 @@ app.put("/api/projects/:id", verifyToken, async (req, res) => {
   try {
     const id = req.params.id;
     await Projects.findByIdAndUpdate(id, { $set: req.body });
-    res.status(200).json("deleted successfully");
+    res.status(200).json("updated successfully");
   } catch (error) {
     console.log(error);
     res.status(500).json("internal server error occured");
   }
 });
 
+// Contact API endpoints
 app.post("/api/contacts", async (req, res) => {
   try {
     const { name, email, phone, project_brief, budget } = req.body;
