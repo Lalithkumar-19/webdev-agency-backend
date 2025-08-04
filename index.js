@@ -88,6 +88,16 @@ app.get("/api/projects", async (req, res) => {
   }
 });
 
+app.get("/api/projects/admin", verifyToken, async (req, res) => {
+  try {
+    const projects = await Projects.find();
+    res.status(200).json(projects);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("internal server error occured");
+  }
+})
+
 app.get("/api/projects/:id", verifyToken, async (req, res) => {
   try {
     const id = req.params.id;
